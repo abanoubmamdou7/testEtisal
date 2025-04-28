@@ -1,5 +1,5 @@
 import cookieParser from "cookie-parser";
-import connectDB from "../../DB/connection.js";
+//import connectDB from "../../DB/connection.js";
 import { glopalErrHandling } from "../utils/errorHandling.js";
 import { AppError } from "../utils/appError.js";
 import authRouter from './auth/auth.router.js'

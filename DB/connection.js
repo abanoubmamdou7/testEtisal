@@ -1,37 +1,72 @@
 import sql from 'mssql';
 
-const connectDB = async () => {
-    try {
-        if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-            throw new Error("Database connection details are missing in environment variables.");
-        }
-
-    const dbConfig = {
-      user: process.env.DB_USER,             // => sa
-      password: process.env.DB_PASSWORD,     // => 123@123qw
-      server: process.env.DB_HOST,            // => 192.168.1.47
-      database: process.env.DB_NAME,          // => ORFANIDES
-      port: Number(process.env.DB_PORT) || 1433,  // => 1433
-      options: {
-        encrypt: false,  // Correct, since your server isn't Azure
-        trustServerCertificate: true,  // Correct, matches TrustServerCertificate=True
-      },
-      pool: {
+// Base configuration that can be extended
+const baseDBConfig = {
+    user: "sa",
+    password: "123@123qw",
+    server: "192.168.1.47",
+    port: Number(process.env.DB_PORT) || 1433,
+    options: {
+        encrypt: false,
+        trustServerCertificate: true,
+    },
+    pool: {
         max: 10,
         min: 0,
         idleTimeoutMillis: 30000,
-      }
-    };
-
-    const pool = new sql.ConnectionPool(dbConfig);
-    await pool.connect();
-    console.log(`Database connected successfully to ${process.env.DB_NAME} at ${process.env.DB_HOST}`);
-
-    return pool;
-  } catch (error) {
-    console.error(`Failed to connect to the database: ${error.message}`);
-    process.exit(1);
-  }
+    },
 };
 
-export default connectDB;
+// Master DB configuration
+const masterDBConfig = {
+    ...baseDBConfig,
+    database: "CLIENT_LICNESE"
+};
+
+// Master DB connection pool
+const masterDB = new sql.ConnectionPool(masterDBConfig);
+
+// Connect to master DB
+const connectToMasterDB = async () => {
+    try {
+        await masterDB.connect();
+        return masterDB;
+    } catch (error) {
+        throw new Error('Unable to connect to the master database');
+    }
+};
+
+// Function to connect to any database dynamically
+const connectToDatabase = async (databaseName) => {
+    const customDBConfig = { ...baseDBConfig, database: databaseName };
+    const dbConnection = new sql.ConnectionPool(customDBConfig);
+
+    try {
+        await dbConnection.connect();
+        console.log(`Successfully connected to the ${databaseName} database.`);
+        return dbConnection;
+    } catch (error) {
+        throw new Error(`Unable to connect to the ${databaseName} database: ${error.message}`);
+    }
+};
+
+// Create a dynamic connection to client database
+const createClientConnection = async (connInfo) => {
+    const clientDB = new sql.ConnectionPool({
+        user: connInfo.SQL_USER,
+        password: connInfo.SQL_USR_PASS,
+        server: connInfo.SQL_SRV_IP.trim(),
+        database: connInfo.SQL_DB_NAME,
+        options: { encrypt: false, trustServerCertificate: true }
+    });
+
+    await clientDB.connect();
+    return clientDB;
+};
+
+export {
+    masterDB,
+    connectToMasterDB,
+    connectToDatabase,
+    createClientConnection
+};
