@@ -1,30 +1,26 @@
-import { errorTranslations } from "../../languages/errorTranslations.js";
-
 export const asyncHandler = (fn) => {
   return (req, res, next) => {
-    fn(req, res, next).catch(next); // cleaner
+    fn(req, res, next).catch((error) => {
+      return next(error);
+    });
   };
 };
 
-export const glopalErrHandling = (error, req, res, next) => {
-  const lang = req.language || "en";
-
-  const errorMessage =
-    errorTranslations[error.message]?.[lang] ||
-    errorTranslations[error.message]?.["en"] ||
-    error.message;
-
-  const statusCode = error.cause || 500;
-
-  const errorResponse = {
-    message: errorMessage,
-    status_code: statusCode,
-  };
-
-  if (process.env.MOOD === "DEV") {
-    errorResponse.error = error;
-    errorResponse.stack = error.stack;
+export const glopalErrHandling = async (error, req, res, next) => {
+  if (error) {
+    if (process.env.MOOD == "DEV") {
+      return res
+        .status(error.cause || 500)
+        .json({
+          message: error.message,
+          status_code: error.cause,
+          error,
+          stack: error.stack,
+        });
+    } else {
+      return res
+        .status(error.cause || 500)
+        .json({ message: error.message, status_code: error.cause });
+    }
   }
-
-  res.status(statusCode).json(errorResponse);
 };

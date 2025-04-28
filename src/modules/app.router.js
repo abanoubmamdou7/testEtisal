@@ -2,6 +2,8 @@ import cookieParser from "cookie-parser";
 import connectDB from "../../DB/connection.js";
 import { glopalErrHandling } from "../utils/errorHandling.js";
 import { AppError } from "../utils/appError.js";
+import authRouter from './auth/auth.router.js'
+
 const initApp = (app, express) => {
   // Built-in Middleware
   app.use(express.json());
@@ -10,6 +12,7 @@ const initApp = (app, express) => {
   // Custom Middlewares
 
   // Routes
+  app.use("/auth", authRouter);
 
 
   // Catch-all for undefined routes
@@ -25,8 +28,13 @@ const initApp = (app, express) => {
   // Global Error Handler
   app.use(glopalErrHandling);
 
-  // Connect to DB
-  connectDB();
+  // Connect to Database
+  // let pool;
+  // connectDB().then((connectedPool) => {
+  //   pool = connectedPool;
+  // }).catch((err) => {
+  //   console.error('Database connection failed', err);
+  // });
 };
 
 export default initApp;

@@ -3,35 +3,26 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import connectDB from './DB/connection.js'; // <<=== here
+import initApp from './src/modules/app.router.js';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Load environment variables
 dotenv.config({ path: path.join(__dirname, "./config/.env") });
 
-// Load environment variables
-dotenv.config();
-
 const app = express();
-
-// Middleware
 app.use(cors());
-app.use(express.json());
 
-// Connect to Database
-let pool;
-connectDB().then((connectedPool) => {
-  pool = connectedPool;
-}).catch((err) => {
-  console.error('Database connection failed', err);
-});
+initApp(app, express);
+
 
 // API endpoint
 app.post('/api/query', async (req, res) => {
   try {
     if (!pool) {
       throw new Error('Database not connected.');
-    }
+    }  
 
     const { query, params } = req.body;
     console.log('Executing query:', query);
