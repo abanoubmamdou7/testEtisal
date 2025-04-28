@@ -13,15 +13,18 @@ export const login = asyncHandler(async (req, res, next) => {
     const connInfo = await findConnectionInfoByClientId(clientId);
     const clientDB = await createClientConnection(connInfo);
     const databaseName = clientDB.config.database;
-
-    // You might want to store the clientDB connection somewhere for later use
-    // Or use connectToDatabase if you need a fresh connection
-
-    res.json({ 
-        message: "success", 
-        databaseName,
-        clientId 
+    res.cookie("clientId", clientId, {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: "None",
+        secure: true,
     });
+
+    res.json({
+        message: "success",
+        databaseName,
+        clientId
+    });
+    await connectToDatabase(databaseName)
 });
 
-// Add other auth-related controllers here

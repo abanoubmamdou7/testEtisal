@@ -28,13 +28,7 @@ const initApp = (app, express) => {
   // Global Error Handler
   app.use(glopalErrHandling);
 
-  // Connect to Database
-  // let pool;
-  // connectDB().then((connectedPool) => {
-  //   pool = connectedPool;
-  // }).catch((err) => {
-  //   console.error('Database connection failed', err);
-  // });
+
 };
 
 export default initApp;
